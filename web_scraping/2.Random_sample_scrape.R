@@ -16,6 +16,7 @@ nom_sample <- data.frame()
 
 # Set the directory path
 path <- "C:/Users/Pablo Uribe/Dropbox/DIME-Team/1. data/raw/202404 - registration/"
+git_path <- "C:/Users/Pablo Uribe/Documents/GitHub/wb/pei-evaluations/South_Soudan/web_scraping/"
 
 positions <- read_xlsx(paste0(path,"positions_vector.xlsx"))
 
@@ -38,8 +39,11 @@ remDr <- rD[["client"]]
 remDr$navigate("https://snsopafisadmin.southsudansafetynet.info/#/auth/login")
 
 # Fill in the login form with your credentials
-remDr$findElement(using = 'id', value = "userName")$sendKeysToElement(list("admin"))
-remDr$findElement(using = 'id', value = "password")$sendKeysToElement(list("Abc@123"))
+source(paste0(git_path,"password.R"))
+
+remDr$findElement(using = 'id', value = "userName")$sendKeysToElement(list(user))
+remDr$findElement(using = 'id', value = "password")$sendKeysToElement(list(password))
+
 
 # Click login button
 remDr$findElements("xpath", "/html/body/app-root/app-login/div/div/div/form/div[3]/button")[[1]]$clickElement()

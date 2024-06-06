@@ -21,7 +21,7 @@ IMPORTANT NOTE: Run up to line 35 to see whether line 37 should be modified. If 
 ****************************************************************************
 
 global data "C:\Users\Pablo Uribe\Dropbox\Arlen\DIME-Team\1. data"
-global date "02-06" // Put the latest date here to generate the dta file
+global date "06-06" // Put the latest date here to generate the dta file
 
 
 ****************************************************************************
@@ -35,7 +35,7 @@ import excel "${data}\raw\household_survey_report-${date}-2024.xlsx", sheet("Hou
 ta countyname
 
 drop if inlist(bomaname, "KASSAVA", "KANGO", "MANGALA", "ROKON") | 	///
-!inlist(countyname, "JUBA", "MELUTH", "TORIT MUNICIPAL COUNCIL", "TORIT", "YEI", "KAPOTEA EAST")
+!inlist(countyname, "JUBA", "MELUTH", "TORIT MUNICIPAL COUNCIL", "TORIT", "YEI", "KAPOTEA EAST", "RAJA")
 
 ****************************************************************************
 *Respondent and alternate sections
@@ -137,22 +137,65 @@ gen nominee = (wouldanyoneinhouseholdbeint == "YES"), after(wouldanyoneinhouseho
 drop wouldanyoneinhouseholdbeint
 
 * Homogenize the names across the dataset to avoid matching problems
-foreach var of varlist name*{
+foreach var of varlist name* alternate1_name alternate2_name{
 	replace `var' = strlower(`var')
 }
 
 
+* Fuzzy match for respondent, alternate and nominee names
+forval number= 1/5{
+	
+	qui matchit name name`number', gen(s`number')
+	
+	replace s`number' = 0 if (age != nominee`number'age | 	///
+			female_respondent != female`number') & s`number' >= 0.75
+			
+}
+ 
+egen smax = rowmax(s?)
+
+drop s?
+
 * Generate dummy for whether a respondent nominated themselves for component 2
-gen self = 1 if (female1 == female_respondent & nominee1age == age) | ///
-				(female2 == female_respondent & nominee2age == age) | ///
-				(female3 == female_respondent & nominee3age == age) | ///
-				(female4 == female_respondent & nominee4age == age) | ///
-				(female5 == female_respondent & nominee5age == age) | ///
-				(name == name1 | name == name2 | name == name3 | name == name4 | name == name5), after(nominee)
-				
+gen 	self = 1 if smax >= 0.75
 replace self = 0 if nominee == 1 & mi(self)
 
-drop name1 name2 name3 name4 name5 phone
+
+forval number= 1/5{
+	
+	qui matchit alternate1_name name`number', gen(s`number')
+	
+	replace s`number' = 0 if (alternate1_female != female`number' & s`number' >= 0.75) | mi(alternate1_name)
+	
+}
+
+egen smax1 = rowmax(s?)
+
+drop s?
+
+
+forval number= 1/5{
+	
+	qui matchit alternate2_name name`number', gen(s`number')
+	
+	replace s`number' = 0 if (alternate2_female != female`number' & s`number' >= 0.75) | mi(alternate2_name)
+	
+}
+
+egen smax2 = rowmax(s?)
+
+drop s?
+
+egen full = rowmax(smax*)
+
+gen 	self2 = 1 if full >= 0.75
+replace self2 = 0 if nominee == 1 & mi(self2)
+
+di as err "Nominees have biometric data:"
+ta self2
+
+drop name1 name2 name3 name4 name5 phone smax* self2 full
+
 
 foreach var of varlist age income householdsize-members_18_35_literate *age {
 	destring `var', replace

@@ -33,9 +33,9 @@ has_phone public_works nominee_age w_18_35 m_18_35 w_18_35_only m_18_35_only 	//
 w_18_64 m_18_64 w_18_64_only m_18_64_only youth_older m_w_18_35 m_w_18_64 		///
 nominee_18_35 nominee_36_64 nominee_literate nominee_youth_literate
 
-global counties " "Juba" "Meluth" "Torit Municipal Council" "Yei" "Kapotea East" " // Make sure Juba is the first one
+global counties " "Juba" "Meluth" "Torit Municipal Council" "Yei" "Kapotea East" "Raja" " // Make sure Juba is the first one
 
-global date "02-06"
+global date "06-06"
 
 foreach county in $counties{
 	cap mkdir "${tables}\\`county'"
@@ -241,7 +241,7 @@ foreach county in $counties{
 
 	graph bar if countyname == "`county'", over(en_payam, sort(1) descending label(angle(45))) ytitle(Percent) subtitle(Distribution of households by Payam in `county', size(medium)) blabel(bar, format(%04.2f))
 
-	graph export "${tables}\\`county'\payams_`date'_`county'_${date}.png", replace
+	graph export "${tables}\\`county'\payams_`county'_${date}.png", replace
 
 	local col = 1
 	count if countyname == "`county'"
@@ -268,7 +268,7 @@ foreach county in $counties{
 
 	graph bar if countyname == "`county'", over(female_respondent, label(nolab)) over(en_relationship, sort(1) descending label(labs(vsmall))) legend(r(1) order(1 "Male" 2 "Female") position(bottom)) asy blabel(bar, format(%04.2f)) bargap(20) outergap(10) ytitle(Share of total registered population) bar(1, color(dknavy)) bar(2, color(dkgreen)) subtitle(Relationship of respondent to household head by gender in `county')
 
-	graph export "${tables}\\`county'\relationships_`date'_`county'_${date}.png", replace
+	graph export "${tables}\\`county'\relationships_`county'_${date}.png", replace
 	
 	restore
 }
